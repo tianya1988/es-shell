@@ -1,0 +1,72 @@
+#!/bin/bash
+#chkconfig: 2345 10 90  
+# description: Elasticsearch Service .... 
+name=$2 
+ES_USER="es"
+ES_GROUP="es"
+if [ -z $name ]
+then
+ES_HOME=/opt/ES5.6.4/elasticsearch-5.6.4-client
+EXEC_PATH=$ES_HOME
+EXEC=elasticsearch-5.6.4-client
+DAEMON=$EXEC_PATH/bin/elasticsearch
+PID_FILE=$ES_HOME/pid/es.pid
+ServiceName='Elasticsearch 5.6.4'
+elif [ $name == "5.6.3" ]
+then   
+ES_HOME=/opt/ES5.6.3/elasticsearch-5.6.3-client
+EXEC_PATH=$ES_HOME  
+EXEC=elasticsearch-5.6.3-client
+DAEMON=$EXEC_PATH/bin/elasticsearch
+PID_FILE=$ES_HOME/pid/es.pid  
+ServiceName='Elasticsearch 5.6.3'  
+fi  
+#. /etc/rc.d/init.d/functions  
+  
+if [ ! -x $DAEMON ] ; then  
+       echo "ERROR: $DAEMON not found"  
+       exit 1  
+fi  
+  
+stop()  
+{  
+       echo "Stoping $ServiceName ..."  
+       ps aux | grep "$EXEC" | kill -9 `awk '{print $2}'` >/dev/null 2>&1  
+       rm -f $PID_FILE  
+       usleep 100  
+       echo "Shutting down $ServiceName: [  successful  ]"  
+}  
+  
+start()  
+{  
+       echo "Starting $ServiceName ..."  
+       su - $ES_USER -c "$DAEMON > /dev/null &"
+       pidof $EXEC > $PID_FILE  
+       usleep 100  
+       echo "Starting $ServiceName: [  successful  ]"  
+}  
+restart()  
+{  
+    stop  
+    start  
+}  
+  
+case "$1" in  
+    start)  
+        start  
+        ;;  
+    stop)  
+        stop  
+        ;;  
+    restart)  
+        restart  
+        ;;  
+    status)  
+        status -p $PID_FILE $DAEMON  
+        ;;  
+    *)  
+        echo "Usage: service $ServiceName {start|stop|restart|status}"  
+        exit 1  
+esac  
+  
+exit $?  
